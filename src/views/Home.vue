@@ -1,20 +1,20 @@
 <template>
   <div class="container">
 
-    <!-- Carousel -->
-    <b-carousel id="carousel1" controls indicators style="max-height: 500px;">
-      <b-carousel-slide img-src="https://via.placeholder.com/1200x300?text=Slide-1"
-        caption="Slide 1"></b-carousel-slide>
-      <b-carousel-slide img-src="https://via.placeholder.com/1200x300?text=Slide-2"
-        caption="Slide 2"></b-carousel-slide>
-      <b-carousel-slide img-src="https://via.placeholder.com/1200x300?text=Slide-3"
-        caption="Slide 3"></b-carousel-slide>
-    </b-carousel>
+    <div class="carrousell" v-if="showCarousel">
+      <!-- Carousel -->
+      <b-carousel id="carousel1" controls indicators style="max-height: 400px;">
+        <b-carousel-slide v-for="(libro, index) in libros" :key="index" :img-src="libro.imagen" :caption="libro.titulo">
+        </b-carousel-slide>
+      </b-carousel>
+    </div>
+
 
     <div class="row justify-content-center">
       <div class="buttons mt-5">
-        <b-button variant="primary" class="ms-3 me-3" size="lg">Ordenar por autor</b-button>
-        <b-button variant="primary" class="ms-3 me-3" size="lg">Ordenar por fecha</b-button>
+        <b-button variant="primary" class="ms-3 me-3" size="lg" @click="sortByAuthor">Ordenar por autor</b-button>
+        <b-button variant="primary" class="ms-3 me-3" size="lg" @click="sortByDate">Ordenar por fecha</b-button>
+
         <b-button variant="primary" class="ms-3 me-3" size="lg">Mostrar si tiene imagen</b-button>
       </div>
     </div>
@@ -67,7 +67,7 @@
         </b-form-group>
 
         <b-form-group id="fecha" label="Fecha de Publicación:" label-for="fecha-input" class="mt-2">
-          <b-form-input id="fecha-input" v-model="fecha" required></b-form-input>
+          <b-form-input id="fecha-input" v-model="fecha" type="date" required></b-form-input>
         </b-form-group>
 
         <b-button class="mt-3 me-3 btn-create" type="submit" variant="primary" @click="">Agregar libro</b-button>
@@ -81,7 +81,7 @@
 
     <!-- Formulario editar libro-->
     <b-modal id="modal-center" v-model="showFormEdit" title="Modificar Libro">
-      <form @submit.prevent="submitForm">
+      <form @submit.prevent="submitFormEdit">
         <b-form-group id="titulo" label="Título:" label-for="titulo-input">
           <b-form-input id="titulo-input" v-model="titulo" required></b-form-input>
         </b-form-group>
@@ -91,7 +91,7 @@
         </b-form-group>
 
         <b-form-group id="fecha" label="Fecha de Publicación:" label-for="fecha-input" class="mt-2">
-          <b-form-input id="fecha-input" v-model="fecha" required></b-form-input>
+          <b-form-input id="fecha-input" v-model="fecha" type="date" required></b-form-input>
         </b-form-group>
 
         <b-button class="mt-3 me-3 btn-create" type="submit" variant="primary" @click="">Guardar Cambios</b-button>
@@ -112,18 +112,64 @@ import axios from 'axios';
 export default {
   data() {
     return {
+      showCarousel: true,
+      lastScrollPosition: 0,
+
       showFormCreate: false,
       titulo: '',
       autor: '',
       fecha: '',
       libros: []
+
+
     };
   },
   mounted() {
     this.getBooks();
+    window.addEventListener('scroll', this.handleScroll);
+  },
+  beforeDestroy() {
+    window.removeEventListener('scroll', this.handleScroll); // eliminar el listener cuando el componente se destruya
   },
   methods: {
+    handleScroll() {
+      const currentScrollPosition = window.scrollY;
+      if (currentScrollPosition > this.lastScrollPosition && currentScrollPosition > 1000) {
+        this.showCarousel = false; // Oculta el carrusel si el usuario hace scroll hacia abajo más de 100 píxeles
+      } else {
+        this.showCarousel = true; // Muestra el carrusel en cualquier otro caso
+      }
+      this.lastScrollPosition = currentScrollPosition;
+    },
+    sortByAuthor() {
+      // Utiliza el método sort para ordenar los libros por autor
+      this.libros.sort((a, b) => {
+        // Compara los autores en minúsculas para asegurarse de que la comparación sea insensible a mayúsculas
+        return a.autor.toLowerCase().localeCompare(b.autor.toLowerCase());
+      });
+    },
+    sortByDate() {
+      // Utiliza el método sort para ordenar los libros por fecha
+      this.libros.sort((a, b) => {
+        // Convierte las fechas a objetos Date para que puedan ser comparadas
+        const dateA = new Date(a.fecha);
+        const dateB = new Date(b.fecha);
+        // Compara las fechas
+        return dateA - dateB;
+      });
+    },
     submitForm() {
+      // Aquí puedes enviar los datos a tu backend o hacer lo que necesites con ellos
+      console.log("Datos del formulario:", this.titulo, this.autor, this.fecha);
+      this.createBook();
+      // Limpia los campos del formulario
+      this.titulo = '';
+      this.autor = '';
+      this.fecha = '';
+      // Oculta el formulario después de enviar
+      this.showFormCreate = false;
+    },
+    submitFormEdit() {
       // Aquí puedes enviar los datos a tu backend o hacer lo que necesites con ellos
       console.log("Datos del formulario:", this.titulo, this.autor, this.fecha);
       // Limpia los campos del formulario
@@ -131,7 +177,7 @@ export default {
       this.autor = '';
       this.fecha = '';
       // Oculta el formulario después de enviar
-      this.showFormCreate = false;
+      this.showFormEdit = false;
     },
     cancelFormCreate() {
       // Limpia los campos del formulario si se cancela
@@ -190,9 +236,25 @@ export default {
         .catch(error => {
           console.error("Hubo un error al obtener usuarios", error)
         })
+    },
+    createBook() {
+      axios.post('http://localhost:8080/api/v1/book/create', {
+        title: this.titulo,
+        author: this.autor,
+        date: this.fecha
+      })
+        .then(response => {
+          this.getBooks();
+          console.log(response)
+        })
+        .catch(error => {
+          console.error("Hubo un error al crear el libro", error)
+        })
     }
   }
 };
+
+
 </script>
 
 <style scoped>
@@ -230,5 +292,10 @@ export default {
 .btn-create {
   width: 100%;
   margin-top: 10px;
+}
+
+.carrousell {
+  margin-top: 20px;
+  margin-bottom: 20%;
 }
 </style>
