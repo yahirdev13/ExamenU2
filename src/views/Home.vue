@@ -5,12 +5,13 @@
     <div class="buttons mt-5">
       <b-button variant="primary" class="ms-3 me-3" size="lg">Ordenar por autor</b-button>
       <b-button variant="primary" class="ms-3 me-3" size="lg">Ordenar por fecha</b-button>
-      <b-button variant="primary" class="ms-3 me-3" size="lg">mostrar si tiene imagen</b-button>
+      <b-button variant="primary" class="ms-3 me-3" size="lg">Mostrar si tiene imagen</b-button>
     </div>
 
     <div class="libros">
 
-      <div class="cards ms-3 mt-5 me-3" v-for="(libro, index) in libros" :key="index">
+      <div class="cards ms-3 mt-5 me-3" v-for="(libro, index) in libros" :key="index" :draggable="true"
+        @dragstart="dragStart(index)" @dragover.prevent @drop="drop(index)">
         <b-card :img-src="libro.imagen" img-alt="Image" img-top tag="article" style="max-width: 20rem;" class="mb-2">
           <b-card-text>
             <b>Autor:</b> {{ libro.autor }}
@@ -25,25 +26,23 @@
       </div>
 
       <div class="crud">
-
         <div class="mt-5">
           <b-button variant="outline-success" @click="showForm = true">
             <img src="../assets/plus.png" />
           </b-button>
         </div>
-        <div class="mt-5">
+        <div class="mt-5" @dragover.prevent @drop="editCard">
           <b-button variant="outline-warning">
             <img src="../assets/pencil.png" />
           </b-button>
         </div>
         <div class="mt-5">
-          <b-button variant="outline-danger">
+          <b-button variant="outline-danger" @dragover.prevent @drop="deleteCard">
             <img src="../assets/trash.png" />
           </b-button>
         </div>
       </div>
     </div>
-
     <!-- Formulario -->
     <b-modal v-model="showForm" title="Agregar Libro">
       <form @submit.prevent="submitForm">
@@ -56,11 +55,11 @@
         </b-form-group>
 
         <b-form-group id="fecha" label="Fecha de Publicación:" label-for="fecha-input">
-          <b-form-input id="fecha-input" type="date" v-model="fecha" required></b-form-input>
+          <b-form-input id="fecha-input" v-model="fecha" required></b-form-input>
         </b-form-group>
 
-        <b-button type="submit" variant="primary">Agregar</b-button>
-        <b-button variant="danger" @click="cancelForm">Cancelar</b-button>
+        <b-button class="mt-3 me-3" type="submit" variant="primary">Agregar libro</b-button>
+        <b-button class="mt-3" variant="danger" @click="cancelForm">Cancelar</b-button>
       </form>
     </b-modal>
 
@@ -101,6 +100,30 @@ export default {
       this.fecha = '';
       // Oculta el formulario
       this.showForm = false;
+    },
+    dragStart(index) {
+      // Guarda el índice de la tarjeta que se está arrastrando
+      this.draggedIndex = index;
+    },
+    drop(index) {
+      // Intercambia las tarjetas
+      const draggedLibro = this.libros[this.draggedIndex];
+      this.libros.splice(this.draggedIndex, 1);
+      this.libros.splice(index, 0, draggedLibro);
+    },
+    editCard() {
+      // Abrir el formulario con los datos de la tarjeta arrastrada hacia el botón de lápiz
+      const editedLibro = this.libros[this.draggedIndex];
+      this.titulo = editedLibro.titulo;
+      this.autor = editedLibro.autor;
+      this.fecha = editedLibro.fecha;
+      this.showForm = true;
+    },
+    deleteCard() {
+      // Elimina la tarjeta arrastrada hacia el botón de eliminar
+      const deletedLibro = this.libros[this.draggedIndex];
+      this.libros.splice(this.draggedIndex, 1);
+      alert(`Se eliminó correctamente el libro "${deletedLibro.titulo}".`);
     }
   }
 };
@@ -109,16 +132,28 @@ export default {
 <style scoped>
 .libros {
   display: flex;
-  /* División de la clase libros en dos columnas */
   flex-wrap: wrap;
+  /* Ajusta el margen para dar espacio entre las tarjetas */
+  margin: -10px;
 }
 
 .cards {
-  flex: 1;
-  /* La primera columna (cards) toma todo el espacio disponible */
+  flex: 1 0 25%;
+  /* Establece el ancho máximo de cada tarjeta al 25% del contenedor padre */
+  box-sizing: border-box;
+  /* Incluye padding y border en el ancho */
+  margin: 10px;
+  /* Espacio entre las tarjetas */
 }
 
 .crud {
+  position: fixed;
+  top: 50%;
+  /* Ajusta la posición vertical según tus preferencias */
+  right: 20px;
+  /* Ajusta la posición horizontal según tus preferencias */
+  transform: translateY(-50%);
+  /* Centra verticalmente */
   width: 200px;
   display: flex;
   justify-content: center;
