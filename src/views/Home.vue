@@ -1,11 +1,22 @@
 <template>
   <div class="container">
 
+    <!-- Carousel -->
+    <b-carousel id="carousel1" controls indicators style="max-height: 500px;">
+      <b-carousel-slide img-src="https://via.placeholder.com/1200x300?text=Slide-1"
+        caption="Slide 1"></b-carousel-slide>
+      <b-carousel-slide img-src="https://via.placeholder.com/1200x300?text=Slide-2"
+        caption="Slide 2"></b-carousel-slide>
+      <b-carousel-slide img-src="https://via.placeholder.com/1200x300?text=Slide-3"
+        caption="Slide 3"></b-carousel-slide>
+    </b-carousel>
 
-    <div class="buttons mt-5">
-      <b-button variant="primary" class="ms-3 me-3" size="lg">Ordenar por autor</b-button>
-      <b-button variant="primary" class="ms-3 me-3" size="lg">Ordenar por fecha</b-button>
-      <b-button variant="primary" class="ms-3 me-3" size="lg">Mostrar si tiene imagen</b-button>
+    <div class="row justify-content-center">
+      <div class="buttons mt-5">
+        <b-button variant="primary" class="ms-3 me-3" size="lg">Ordenar por autor</b-button>
+        <b-button variant="primary" class="ms-3 me-3" size="lg">Ordenar por fecha</b-button>
+        <b-button variant="primary" class="ms-3 me-3" size="lg">Mostrar si tiene imagen</b-button>
+      </div>
     </div>
 
     <div class="libros">
@@ -27,7 +38,7 @@
 
       <div class="crud">
         <div class="mt-5">
-          <b-button variant="outline-success" @click="showForm = true">
+          <b-button variant="outline-success" @click="showFormCreate = true">
             <img src="../assets/plus.png" />
           </b-button>
         </div>
@@ -43,24 +54,53 @@
         </div>
       </div>
     </div>
-    <!-- Formulario -->
-    <b-modal v-model="showForm" title="Agregar Libro">
+
+    <!-- Formulario crear libro-->
+    <b-modal id="modal-center" v-model="showFormCreate" title="Agregar Libro">
       <form @submit.prevent="submitForm">
         <b-form-group id="titulo" label="Título:" label-for="titulo-input">
           <b-form-input id="titulo-input" v-model="titulo" required></b-form-input>
         </b-form-group>
 
-        <b-form-group id="autor" label="Autor:" label-for="autor-input">
+        <b-form-group id="autor" label="Autor:" label-for="autor-input" class="mt-2">
           <b-form-input id="autor-input" v-model="autor" required></b-form-input>
         </b-form-group>
 
-        <b-form-group id="fecha" label="Fecha de Publicación:" label-for="fecha-input">
+        <b-form-group id="fecha" label="Fecha de Publicación:" label-for="fecha-input" class="mt-2">
           <b-form-input id="fecha-input" v-model="fecha" required></b-form-input>
         </b-form-group>
 
-        <b-button class="mt-3 me-3" type="submit" variant="primary">Agregar libro</b-button>
-        <b-button class="mt-3" variant="danger" @click="cancelForm">Cancelar</b-button>
+        <b-button class="mt-3 me-3 btn-create" type="submit" variant="primary" @click="">Agregar libro</b-button>
       </form>
+      <template #modal-footer>
+
+        <b-button class="mt-3" variant="danger" @click="cancelFormCreate">Cancelar</b-button>
+      </template>
+    </b-modal>
+
+
+    <!-- Formulario editar libro-->
+    <b-modal id="modal-center" v-model="showFormEdit" title="Modificar Libro">
+      <form @submit.prevent="submitForm">
+        <b-form-group id="titulo" label="Título:" label-for="titulo-input">
+          <b-form-input id="titulo-input" v-model="titulo" required></b-form-input>
+        </b-form-group>
+
+        <b-form-group id="autor" label="Autor:" label-for="autor-input" class="mt-2">
+          <b-form-input id="autor-input" v-model="autor" required></b-form-input>
+        </b-form-group>
+
+        <b-form-group id="fecha" label="Fecha de Publicación:" label-for="fecha-input" class="mt-2">
+          <b-form-input id="fecha-input" v-model="fecha" required></b-form-input>
+        </b-form-group>
+
+        <b-button class="mt-3 me-3 btn-create" type="submit" variant="primary" @click="">Guardar Cambios</b-button>
+      </form>
+
+      <template #modal-footer>
+
+        <b-button class="mt-3" variant="danger" @click="cancelFormEdit">Cancelar</b-button>
+      </template>
     </b-modal>
 
 
@@ -68,19 +108,19 @@
 </template>
 
 <script>
+import axios from 'axios';
 export default {
   data() {
     return {
-      showForm: false,
+      showFormCreate: false,
       titulo: '',
       autor: '',
       fecha: '',
-      libros: [
-        { titulo: 'Libro 1', autor: 'Autor 1', fecha: '2023-01-01', imagen: 'https://picsum.photos/600/300/?image=25' },
-        { titulo: 'Libro 2', autor: 'Autor 2', fecha: '2022-05-15', imagen: 'https://picsum.photos/600/300/?image=26' },
-        { titulo: 'Libro 3', autor: 'Autor 3', fecha: '2021-11-30', imagen: 'https://picsum.photos/600/300/?image=27' }
-      ]
+      libros: []
     };
+  },
+  mounted() {
+    this.getBooks();
   },
   methods: {
     submitForm() {
@@ -91,15 +131,23 @@ export default {
       this.autor = '';
       this.fecha = '';
       // Oculta el formulario después de enviar
-      this.showForm = false;
+      this.showFormCreate = false;
     },
-    cancelForm() {
+    cancelFormCreate() {
       // Limpia los campos del formulario si se cancela
       this.titulo = '';
       this.autor = '';
       this.fecha = '';
       // Oculta el formulario
-      this.showForm = false;
+      this.showFormCreate = false;
+    },
+    cancelFormEdit() {
+      // Limpia los campos del formulario si se cancela
+      this.titulo = '';
+      this.autor = '';
+      this.fecha = '';
+      // Oculta el formulario
+      this.showFormEdit = false;
     },
     dragStart(index) {
       // Guarda el índice de la tarjeta que se está arrastrando
@@ -117,13 +165,31 @@ export default {
       this.titulo = editedLibro.titulo;
       this.autor = editedLibro.autor;
       this.fecha = editedLibro.fecha;
-      this.showForm = true;
+      this.showFormEdit = true;
     },
     deleteCard() {
       // Elimina la tarjeta arrastrada hacia el botón de eliminar
       const deletedLibro = this.libros[this.draggedIndex];
       this.libros.splice(this.draggedIndex, 1);
       alert(`Se eliminó correctamente el libro "${deletedLibro.titulo}".`);
+    },
+    getBooks() {
+      axios.get('http://localhost:8080/api/v1/book/getAll')
+        .then(response => {
+          console.log(response)
+          this.libros = response.data.data.map(libro => {
+            return {
+              titulo: libro.title,
+              autor: libro.author,
+              fecha: libro.date,
+              imagen: libro.image
+            }
+          })
+          console.log(this.libros)
+        })
+        .catch(error => {
+          console.error("Hubo un error al obtener usuarios", error)
+        })
     }
   }
 };
@@ -159,5 +225,10 @@ export default {
   justify-content: center;
   align-items: center;
   flex-direction: column;
+}
+
+.btn-create {
+  width: 100%;
+  margin-top: 10px;
 }
 </style>
