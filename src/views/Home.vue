@@ -15,7 +15,9 @@
         <b-button variant="primary" class="ms-3 me-3" size="lg" @click="sortByAuthor">Ordenar por autor</b-button>
         <b-button variant="primary" class="ms-3 me-3" size="lg" @click="sortByDate">Ordenar por fecha</b-button>
 
-        <b-button variant="primary" class="ms-3 me-3" size="lg">Mostrar si tiene imagen</b-button>
+        <b-button variant="primary" class="ms-3 me-3" size="lg" @click="showImageInfoModal">Mostrar si tiene
+          imagen</b-button>
+
       </div>
     </div>
 
@@ -112,14 +114,17 @@ import axios from 'axios';
 export default {
   data() {
     return {
+
       showCarousel: true,
       lastScrollPosition: 0,
 
       showFormCreate: false,
+      id: '',
       titulo: '',
       autor: '',
       fecha: '',
       libros: []
+
 
 
     };
@@ -134,10 +139,15 @@ export default {
   methods: {
     handleScroll() {
       const currentScrollPosition = window.scrollY;
-      if (currentScrollPosition > this.lastScrollPosition && currentScrollPosition > 1000) {
-        this.showCarousel = false; // Oculta el carrusel si el usuario hace scroll hacia abajo más de 100 píxeles
+      if (currentScrollPosition > 200 && currentScrollPosition > this.lastScrollPosition) {
+        // Oculta el carrusel si el usuario hace scroll hacia abajo más de 100 píxeles
+        this.showCarousel = false;
+      } else if (currentScrollPosition < this.lastScrollPosition) {
+        // Si el usuario hace scroll hacia arriba, no hagas nada
+        // El carrusel seguirá oculto si ya lo está
       } else {
-        this.showCarousel = true; // Muestra el carrusel en cualquier otro caso
+        // Muestra el carrusel en cualquier otro caso
+        this.showCarousel = true;
       }
       this.lastScrollPosition = currentScrollPosition;
     },
@@ -158,6 +168,10 @@ export default {
         return dateA - dateB;
       });
     },
+    showImageInfoModal() {
+      // Lógica para mostrar el modal con la información sobre la imagen
+      this.$bvModal.msgBoxOk('Todos los libros se crean con una imagen aleatoria.');
+    },
     submitForm() {
       // Aquí puedes enviar los datos a tu backend o hacer lo que necesites con ellos
       console.log("Datos del formulario:", this.titulo, this.autor, this.fecha);
@@ -173,6 +187,7 @@ export default {
       // Aquí puedes enviar los datos a tu backend o hacer lo que necesites con ellos
       console.log("Datos del formulario:", this.titulo, this.autor, this.fecha);
       // Limpia los campos del formulario
+      this.updateBook(this.id);
       this.titulo = '';
       this.autor = '';
       this.fecha = '';
@@ -208,6 +223,7 @@ export default {
     editCard() {
       // Abrir el formulario con los datos de la tarjeta arrastrada hacia el botón de lápiz
       const editedLibro = this.libros[this.draggedIndex];
+      this.id = editedLibro.id;
       this.titulo = editedLibro.titulo;
       this.autor = editedLibro.autor;
       this.fecha = editedLibro.fecha;
@@ -216,7 +232,8 @@ export default {
     deleteCard() {
       // Elimina la tarjeta arrastrada hacia el botón de eliminar
       const deletedLibro = this.libros[this.draggedIndex];
-      this.libros.splice(this.draggedIndex, 1);
+      this.id = deletedLibro.id;
+      this.deleteBook(this.id);
       alert(`Se eliminó correctamente el libro "${deletedLibro.titulo}".`);
     },
     getBooks() {
@@ -225,6 +242,7 @@ export default {
           console.log(response)
           this.libros = response.data.data.map(libro => {
             return {
+              id: libro.id,
               titulo: libro.title,
               autor: libro.author,
               fecha: libro.date,
@@ -250,7 +268,34 @@ export default {
         .catch(error => {
           console.error("Hubo un error al crear el libro", error)
         })
-    }
+    },
+    updateBook(id) {
+      axios.put(`http://localhost:8080/api/v1/book/update/${id}`, {
+        title: this.titulo,
+        author: this.autor,
+        date: this.fecha
+      })
+        .then(response => {
+          console.log(response)
+          this.getBooks();
+        })
+        .catch(error => {
+          console.error("Hubo un error al actualizar el libro", error)
+        })
+    },
+    deleteBook(id) {
+      axios.delete(`http://localhost:8080/api/v1/book/delete/${id}`)
+        .then(response => {
+          console.log(response)
+          this.getBooks();
+        })
+        .catch(error => {
+          console.error("Hubo un error al eliminar el libro", error)
+        })
+    },
+
+
+
   }
 };
 
