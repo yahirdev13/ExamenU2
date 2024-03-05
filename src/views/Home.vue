@@ -134,76 +134,75 @@ export default {
     window.addEventListener('scroll', this.handleScroll);
   },
   beforeDestroy() {
-    window.removeEventListener('scroll', this.handleScroll); // eliminar el listener cuando el componente se destruya
+    window.removeEventListener('scroll', this.handleScroll);
   },
   methods: {
     handleScroll() {
       const currentScrollPosition = window.scrollY;
       if (currentScrollPosition > 200 && currentScrollPosition > this.lastScrollPosition) {
-        // Oculta el carrusel si el usuario hace scroll hacia abajo más de 100 píxeles
+
         this.showCarousel = false;
       } else if (currentScrollPosition < this.lastScrollPosition) {
-        // Si el usuario hace scroll hacia arriba, no hagas nada
-        // El carrusel seguirá oculto si ya lo está
+
       } else {
-        // Muestra el carrusel en cualquier otro caso
+
         this.showCarousel = true;
       }
       this.lastScrollPosition = currentScrollPosition;
     },
     sortByAuthor() {
-      // Utiliza el método sort para ordenar los libros por autor
+
       this.libros.sort((a, b) => {
-        // Compara los autores en minúsculas para asegurarse de que la comparación sea insensible a mayúsculas
+
         return a.autor.toLowerCase().localeCompare(b.autor.toLowerCase());
       });
     },
     sortByDate() {
-      // Utiliza el método sort para ordenar los libros por fecha
+
       this.libros.sort((a, b) => {
-        // Convierte las fechas a objetos Date para que puedan ser comparadas
+
         const dateA = new Date(a.fecha);
         const dateB = new Date(b.fecha);
-        // Compara las fechas
+
         return dateA - dateB;
       });
     },
     showImageInfoModal() {
-      // Lógica para mostrar el modal con la información sobre la imagen
+
       this.$bvModal.msgBoxOk('Todos los libros se crean con una imagen aleatoria.');
     },
     submitForm() {
-      // Aquí puedes enviar los datos a tu backend o hacer lo que necesites con ellos
-      console.log("Datos del formulario:", this.titulo, this.autor, this.fecha);
+
+
       this.createBook();
-      // Limpia los campos del formulario
+
       this.titulo = '';
       this.autor = '';
       this.fecha = '';
-      // Oculta el formulario después de enviar
+
       this.showFormCreate = false;
     },
     submitFormEdit() {
-      // Aquí puedes enviar los datos a tu backend o hacer lo que necesites con ellos
+
       console.log("Datos del formulario:", this.titulo, this.autor, this.fecha);
-      // Limpia los campos del formulario
+
       this.updateBook(this.id);
       this.titulo = '';
       this.autor = '';
       this.fecha = '';
-      // Oculta el formulario después de enviar
+
       this.showFormEdit = false;
     },
     cancelFormCreate() {
-      // Limpia los campos del formulario si se cancela
+
       this.titulo = '';
       this.autor = '';
       this.fecha = '';
-      // Oculta el formulario
+
       this.showFormCreate = false;
     },
     cancelFormEdit() {
-      // Limpia los campos del formulario si se cancela
+
       this.titulo = '';
       this.autor = '';
       this.fecha = '';
@@ -211,17 +210,17 @@ export default {
       this.showFormEdit = false;
     },
     dragStart(index) {
-      // Guarda el índice de la tarjeta que se está arrastrando
+
       this.draggedIndex = index;
     },
     drop(index) {
-      // Intercambia las tarjetas
+
       const draggedLibro = this.libros[this.draggedIndex];
       this.libros.splice(this.draggedIndex, 1);
       this.libros.splice(index, 0, draggedLibro);
     },
     editCard() {
-      // Abrir el formulario con los datos de la tarjeta arrastrada hacia el botón de lápiz
+
       const editedLibro = this.libros[this.draggedIndex];
       this.id = editedLibro.id;
       this.titulo = editedLibro.titulo;
@@ -230,7 +229,7 @@ export default {
       this.showFormEdit = true;
     },
     deleteCard() {
-      // Elimina la tarjeta arrastrada hacia el botón de eliminar
+
       const deletedLibro = this.libros[this.draggedIndex];
       this.id = deletedLibro.id;
       this.deleteBook(this.id);
@@ -306,27 +305,27 @@ export default {
 .libros {
   display: flex;
   flex-wrap: wrap;
-  /* Ajusta el margen para dar espacio entre las tarjetas */
+
   margin: -10px;
 }
 
 .cards {
   flex: 1 0 25%;
-  /* Establece el ancho máximo de cada tarjeta al 25% del contenedor padre */
+
   box-sizing: border-box;
-  /* Incluye padding y border en el ancho */
+
   margin: 10px;
-  /* Espacio entre las tarjetas */
+
 }
 
 .crud {
   position: fixed;
   top: 50%;
-  /* Ajusta la posición vertical según tus preferencias */
+
   right: 20px;
-  /* Ajusta la posición horizontal según tus preferencias */
+
   transform: translateY(-50%);
-  /* Centra verticalmente */
+
   width: 200px;
   display: flex;
   justify-content: center;
